@@ -1,24 +1,34 @@
-let resultsContainer = document.getElementsByClassName("container")[0]
+const resultsContainer = document.getElementsByClassName("container")[0]
+
+const debounce = (func, delay) => {
+    let debounceTimer
+    return function() {
+        const context = this
+        const args = arguments
+        clearTimeout(debounceTimer)
+        debounceTimer = setTimeout(() => func.apply(context, args), delay)
+    }
+}
 
 const validateInput = (el) => {
-    if(el.value === ""){
+    if (el.value === "") {
         resultsContainer.innerHTML = "<p>Type something in the above search input</p>"
-    }else{
+    } else {
         generateResults(el.value, el)
     }
 }
 
 const generateResults = (searchValue, inputField) => {
     fetch(
-        "https://en.wikipedia.org/w/api.php?action=query&list=search&prop=info&inprop=url&utf8=&format=json&origin=*&srlimit=20&srsearch="
-        + searchValue
+        "https://en.wikipedia.org/w/api.php?action=query&list=search&prop=info&inprop=url&utf8=&format=json&origin=*&srlimit=20&srsearch=" +
+        searchValue
     )
     .then(response => response.json())
     .then(data => {
         let results = data.query.search
         let numberOfResults = data.query.search.length
         resultsContainer.innerHTML = ""
-        for(let i=0; i<numberOfResults; i++) {
+        for (let i = 0; i < numberOfResults; i++) {
             let result = document.createElement("div")
             result.classList.add("results")
             result.innerHTML = `
@@ -30,8 +40,14 @@ const generateResults = (searchValue, inputField) => {
             `
             resultsContainer.appendChild(result)
         }
-        if(inputField.value === ""){
+        if (inputField.value === "") {
             resultsContainer.innerHTML = "<p>Type something in the above search input</p>"
         }
     })
 }
+
+const debouncedValidateInput = debounce(validateInput, 300)
+
+document.querySelector('input[type="text"]').addEventListener('keyup', function() {
+    debouncedValidateInput(this)
+})
